@@ -1,10 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserInterface } from '../interface/user.interface';
 import * as bcrypt from 'bcrypt';
 import { User } from '../schema/user.schema';
-import { CreateUserDto } from '../dto';
+import { CreateUserDto, UpdateUserDto } from '../dto';
 
 @Injectable()
 export class UserService {
@@ -14,7 +19,11 @@ export class UserService {
   ) {}
 
   async signup({ userDto }): Promise<User> {
-    const { password, ...rest } = userDto;
+    const { password, confirmPassword, ...rest } = userDto;
+    // Validate confirm password
+    if (password !== confirmPassword) {
+      throw new Error('Confirm password does not match.');
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
     const createdUser = new this.userModel({
       ...rest,
@@ -61,5 +70,29 @@ export class UserService {
       updatedTime: new Date(),
     });
     return createdUser.save();
+  }
+
+  async update(
+    userId: string,
+    updateUserDto: UpdateUserDto,
+    currentUserRole: string,
+  ): Promise<UserInterface> {
+    const user = await this.userModel.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    if (currentUserRole === 'user' && user.role === 'admin') {
+      throw new UnauthorizedException(
+        'Unauthorized: Insufficient permissions to update this user.',
+      );
+    }
+
+    // Update user fields
+    Object.assign(user, updateUserDto);
+    user.updatedTime = new Date();
+
+    return await user.save();
   }
 }
