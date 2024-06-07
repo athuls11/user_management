@@ -89,10 +89,21 @@ export class UserService {
       );
     }
 
-    // Update user fields
     Object.assign(user, updateUserDto);
     user.updatedTime = new Date();
 
     return await user.save();
+  }
+
+  async view(userId: string, currentUserRole: string) {
+    const user = await this.userModel.findById(userId);
+    if (currentUserRole === 'user') {
+      return await this.userModel
+        .find({ role: 'user' })
+        .select('-password -createdTime -updatedTime -__v');
+    }
+    return await this.userModel
+      .find()
+      .select('-password -createdTime -updatedTime -__v');
   }
 }

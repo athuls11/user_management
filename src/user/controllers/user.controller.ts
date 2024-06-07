@@ -102,4 +102,12 @@ export class UserController {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+
+  @UseGuards(JwtGuard)
+  @Get('view')
+  async viewUser(@Req() req: any) {
+    const requesterId = req.user.id;
+    const currentUserRole = req.user.role;
+    return await this.userService.view(requesterId, currentUserRole);
+  }
 }
