@@ -1,4 +1,12 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsString, Length } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
 import { Role } from '../interface/user.interface';
 
 export class CreateUserDto {
@@ -6,6 +14,7 @@ export class CreateUserDto {
   @IsString()
   firstName: string;
 
+  @IsOptional()
   @IsString()
   middleName?: string;
 
@@ -18,16 +27,18 @@ export class CreateUserDto {
   email: string;
 
   @IsNotEmpty()
-  @IsString()
-  @Length(6, 12, {
-    message: 'Password must be between 6 to 12 characters',
-  })
+  @Length(6, 12)
   password: string;
 
   @IsNotEmpty()
-  @IsEnum([null, Role.ADMIN, Role.USER])
-  readonly role: Role;
+  @Length(6, 12)
+  confirmPassword: string;
 
+  @IsNotEmpty()
+  @IsEnum(Role)
+  role: Role;
+
+  @IsOptional()
   @IsString()
   department?: string;
 }
